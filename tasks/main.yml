@@ -1,0 +1,58 @@
+- name: create group
+  group: name={{ teamcity_exporter_group }}
+  when: teamcity_exporter_group not in ['root', teamcity_exporter_user]
+
+- name: create user
+  user: name={{ teamcity_exporter_user }}
+        group={{ teamcity_exporter_group  if teamcity_exporter_group != teamcity_exporter_user else omit }}
+        createhome=no
+        home={{ teamcity_exporter_config_dir }}
+        shell=/sbin/nologin
+  when: teamcity_exporter_user != 'root'
+
+- name: create dirs
+  file: dest={{ item }} owner={{ teamcity_exporter_user }} group={{ teamcity_exporter_group }} state=directory
+  with_items:
+    - "{{ teamcity_exporter_config_dir }}"
+    - "{{ teamcity_exporter_log_path }}"
+    - "{{ teamcity_exporter_pid_path }}"
+  
+- name: put config
+  template: src={{ teamcity_exporter_config_template_path }}
+            dest={{ teamcity_exporter_config_path }}
+            owner={{ teamcity_exporter_user }} group={{ teamcity_exporter_group }}
+            mode=400
+  notify: "{{ 'systemd' if teamcity_exporter_service_mgr == 'systemd' else 'initd' }} restart teamcity_exporter"
+  tags: conf
+  
+- name: add systemd service
+  template:
+    src: etc/systemd/system/teamcity_exporter.service.j2
+    dest: /etc/systemd/system/teamcity_exporter.service
+  when: teamcity_exporter_service_mgr == 'systemd'
+  notify: systemd restart teamcity_exporter
+
+- name: add init-script
+  template:
+    src: etc/init.d/teamcity_exporter.{{ ansible_os_family|lower }}.sh.j2
+    dest: /etc/init.d/teamcity_exporter
+    mode: "0755"
+  when: teamcity_exporter_service_mgr in ['upstart', 'sysvinit']
+  notify: initd restart teamcity_exporter
+  
+- name: add defaults options
+  template:
+    src: etc/default/teamcity_exporter.j2
+    dest: /etc/default/teamcity_exporter
+  notify: "{{ 'systemd' if teamcity_exporter_service_mgr == 'systemd' else 'initd' }} restart teamcity_exporter"
+
+- name: start teamcity_exporter
+  service:
+    name: teamcity_exporter
+    state: started
+    enabled: yes
+
+- name: flush handlers
+  meta: flush_handlers  
+
+- include: test.yml

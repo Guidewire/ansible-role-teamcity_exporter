@@ -1,0 +1,14 @@
+teamcity_exporter_install_path: /usr/local/bin/
+teamcity_exporter_short_description: The plugin for Prometheus
+teamcity_exporter_long_description: "Prometheus exporter for machine metrics, written in Go with pluggable metric collectors."
+teamcity_exporter_doc_url: https://github.com/Guidewire/teamcity_exporter
+teamcity_exporter_extra_options: {}
+teamcity_exporter_log_path: /var/log/teamcity_exporter
+teamcity_exporter_pid_path: /var/run/teamcity_exporter
+teamcity_exporter_config_dir: /etc/teamcity_exporter
+teamcity_exporter_config_path: "{{ teamcity_exporter_config_dir }}/config.yaml"
+teamcity_exporter_service_mgr: "{{ ansible_service_mgr }}"
+teamcity_exporter_listen_port: '9107'
+teamcity_exporter_listen_host: ''
+teamcity_exporter_user: tc_exp
+teamcity_exporter_group: tc_exp

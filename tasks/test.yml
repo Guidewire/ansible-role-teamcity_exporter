@@ -1,0 +1,15 @@
+- name: wait for exporter to start
+  wait_for:
+    host: "{{ teamcity_exporter_listen_host if teamcity_exporter_listen_host != '' else omit }}"
+    port: "{{ teamcity_exporter_listen_port }}"
+    timeout: 60
+    
+- name: get metrics page
+  uri:
+    url: "http://{{ teamcity_exporter_listen_host if teamcity_exporter_listen_host not in ['', '0.0.0.0'] else '127.0.0.1' }}:{{ teamcity_exporter_listen_port }}/metrics"
+    return_content: yes
+  register: result
+
+- name: verify metrics page
+  fail:
+  when: "'teamcity_exporter_build_info' not in result.content"

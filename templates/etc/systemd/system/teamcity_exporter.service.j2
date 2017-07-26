@@ -1,0 +1,17 @@
+# -*- mode: conf -*-
+
+[Unit]
+Description={{ teamcity_exporter_long_description }}
+Documentation={{ teamcity_exporter_doc_url }}
+After=network.target
+
+[Service]
+EnvironmentFile=/etc/default/teamcity_exporter
+User={{ teamcity_exporter_user }}
+ExecStart={{ teamcity_exporter_install_path }}/teamcity_exporter $TEAMCITY_EXPORTER_OPTS
+ExecReload=/bin/kill -HUP $MAINPID
+LimitNOFILE=10000
+Restart=always
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,10 @@
+- name: systemd restart teamcity_exporter
+  systemd:
+    name: teamcity_exporter
+    state: restarted
+    daemon_reload: yes
+
+- name: initd restart teamcity_exporter
+  service:
+    name: teamcity_exporter
+    state: restarted

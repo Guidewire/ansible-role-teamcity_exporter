@@ -1,0 +1,5 @@
+TEAMCITY_EXPORTER_OPTS="-config {{ teamcity_exporter_config_path }} -web.listen-address {{ teamcity_exporter_listen_host }}:{{ teamcity_exporter_listen_port }}
+{%- for key in teamcity_exporter_extra_options.keys() -%}
+{{ ' ' + key }}={{ teamcity_exporter_extra_options[key] }}
+{%- endfor %}"
+START=yes

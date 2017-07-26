@@ -1,0 +1,6 @@
+instances:
+  - name: instance1
+    url: http://127.0.0.1
+    username: login
+    password: password
+    scrape_interval: 30
