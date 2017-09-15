@@ -6,7 +6,7 @@
 # Description:       {{ teamcity_exporter_long_description }}
 #
 # chkconfig: 2345 80 80
-# config:  {{ teamcity_exporter_config_path }}
+# config:  {{ teamcity_exporter_config_folder }}/teamcity_exporter.yaml
 # pidfile: {{ teamcity_exporter_pid_path }}/teamcity_exporter.pid
 #
 #
@@ -19,7 +19,7 @@
 
 NAME=teamcity_exporter
 DESC="{{ teamcity_exporter_long_description }}"
-DAEMON={{ teamcity_exporter_install_path }}/teamcity_exporter
+DAEMON={{ teamcity_exporter_install_path }}/teamcity_exporter/teamcity_exporter
 USER={{ teamcity_exporter_user }}
 GROUP={{ teamcity_exporter_group }}
 PID="{{ teamcity_exporter_pid_path }}/$NAME.pid"

@@ -1,7 +1,0 @@
-dependencies:
-  - role: go-deploy
-    go_build_repo: github.com/Guidewire/teamcity_exporter
-    go_deploy_git_repo_version: dev
-    go_build_deploy_path: "{{ teamcity_exporter_install_path }}"
-    go_deploy_notify:
-      - "{{ 'systemd' if teamcity_exporter_service_mgr == 'systemd' else 'initd' }} restart teamcity_exporter"

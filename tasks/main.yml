@@ -1,3 +1,18 @@
+---
+- name: check init-system
+  fail: msg="unsupported init-system {{ teamcity_exporter_service_mgr }}"
+  when: teamcity_exporter_service_mgr not in ['systemd', 'upstart', 'sysvinit']
+
+- name: check OS family
+  fail: msg="unsupported OS {{ ansible_os_family }}"
+  when: ansible_os_family not in ['RedHat', 'Debian']
+
+- debug: msg="Version {{ teamcity_exporter_version }}"
+
+- name: define teamcity_exporter_install_version variable
+  set_fact:
+    teamcity_exporter_install_version: "{{ teamcity_exporter_version }}"
+
 - name: create group
   group: name={{ teamcity_exporter_group }}
   when: teamcity_exporter_group not in ['root', teamcity_exporter_user]
@@ -6,24 +21,39 @@
   user: name={{ teamcity_exporter_user }}
         group={{ teamcity_exporter_group  if teamcity_exporter_group != teamcity_exporter_user else omit }}
         createhome=no
-        home={{ teamcity_exporter_config_dir }}
+        home={{ teamcity_exporter_config_folder }}
         shell=/sbin/nologin
   when: teamcity_exporter_user != 'root'
 
 - name: create dirs
   file: dest={{ item }} owner={{ teamcity_exporter_user }} group={{ teamcity_exporter_group }} state=directory
   with_items:
-    - "{{ teamcity_exporter_config_dir }}"
+    - "{{ teamcity_exporter_config_folder }}"
     - "{{ teamcity_exporter_log_path }}"
     - "{{ teamcity_exporter_pid_path }}"
-  
-- name: put config
-  template: src={{ teamcity_exporter_config_template_path }}
-            dest={{ teamcity_exporter_config_path }}
-            owner={{ teamcity_exporter_user }} group={{ teamcity_exporter_group }}
-            mode=400
-  notify: "{{ 'systemd' if teamcity_exporter_service_mgr == 'systemd' else 'initd' }} restart teamcity_exporter"
-  tags: conf
+
+- block:
+   - name: get latest release
+     uri:
+         url: https://api.github.com/repos/guidewire/teamcity_exporter/releases/latest
+         return_content: yes
+     register: latest
+
+   - name: show latest version
+     debug: msg="{{ latest.json.tag_name }}"
+
+   - name: set teamcity_exporter_install_version to latest
+     set_fact:
+       teamcity_exporter_install_version: "{{ latest.json.tag_name|replace('v', '') }}"
+  when: teamcity_exporter_install_version == 'latest'
+
+- name: download and untar binary
+  unarchive:
+    src:  "https://github.com/guidewire/teamcity_exporter/releases/download/{{ teamcity_exporter_install_version }}/teamcity_exporter-{{ teamcity_exporter_install_version }}.{{ teamcity_exporter_platform_suffix }}.tar.gz"
+    dest: "{{ teamcity_exporter_install_path }}"
+    copy: no
+    list_files: yes
+  register: result
   
 - name: add systemd service
   template:
@@ -39,12 +69,29 @@
     mode: "0755"
   when: teamcity_exporter_service_mgr in ['upstart', 'sysvinit']
   notify: initd restart teamcity_exporter
+
+- name: create symlink for teamcity_exporter folder
+  file:
+    src: "{{ result.files[0] }}"
+    dest: "{{ teamcity_exporter_install_path }}/teamcity_exporter"
+    state: link
+    force: yes
+  when: not ansible_check_mode
+  notify: "{{ 'systemd' if teamcity_exporter_service_mgr == 'systemd' else 'initd' }} restart teamcity_exporter"
   
 - name: add defaults options
   template:
     src: etc/default/teamcity_exporter.j2
     dest: /etc/default/teamcity_exporter
   notify: "{{ 'systemd' if teamcity_exporter_service_mgr == 'systemd' else 'initd' }} restart teamcity_exporter"
+
+- name: put config
+  template: src={{ teamcity_exporter_config_template_path }}
+            dest={{ teamcity_exporter_config_folder }}/teamcity_exporter.yaml
+            owner={{ teamcity_exporter_user }} group={{ teamcity_exporter_group }}
+            mode=400
+  notify: "{{ 'systemd' if teamcity_exporter_service_mgr == 'systemd' else 'initd' }} restart teamcity_exporter"
+  tags: conf
 
 - name: start teamcity_exporter
   service:

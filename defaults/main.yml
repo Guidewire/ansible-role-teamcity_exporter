@@ -1,1 +1,16 @@
-teamcity_exporter_config_template_path: "etc/teamcity_exporter/config-default.yaml"
+---
+teamcity_exporter_group: teamcity_exporter
+teamcity_exporter_user:  teamcity_exporter
+
+# folder to download and untar teamcity_exporter's binary
+teamcity_exporter_install_path:         /opt
+# folder to store configuration files
+teamcity_exporter_config_folder:        /etc/teamcity_exporter
+# specify path to configuration file if you're not going to use a default one
+teamcity_exporter_config_template_path: "{{ role_path }}/templates/etc/teamcity_exporter/config-default.yaml"
+
+# specify release version like '0.1.0' or use 'latest', the tarball will be downloaded directly from github releases page
+teamcity_exporter_version:              latest
+
+teamcity_exporter_listen_port:          "9107"
+teamcity_exporter_listen_host:          "0.0.0.0"

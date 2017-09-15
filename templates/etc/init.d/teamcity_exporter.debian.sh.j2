@@ -18,7 +18,7 @@ set -e
 
 NAME=teamcity_exporter
 DESC="Prometheus exporter for machine metrics, written in Go with pluggable metric collectors"
-DAEMON={{ teamcity_exporter_install_path }}/teamcity_exporter
+DAEMON={{ teamcity_exporter_install_path }}/teamcity_exporter/teamcity_exporter
 USER={{ teamcity_exporter_user }}
 PID="{{ teamcity_exporter_pid_path }}/$NAME.pid"
 LOG="{{ teamcity_exporter_log_path }}/$NAME.log"
